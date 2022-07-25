@@ -1,6 +1,7 @@
 package io.getblok.getblok_plasma.other_tests
 
 import com.google.common.primitives.{Ints, Longs}
+import io.getblok.getblok_plasma.ByteConversion.convertsLongKey
 import io.getblok.getblok_plasma.{ByteConversion, PlasmaParameters}
 import io.getblok.getblok_plasma.collections.{LocalPlasmaMap, PlasmaMap, ProvenResult}
 import io.getblok.getblok_plasma.other_tests.PlasmaMapLevelDBSuite.{TestLong, convertsTestInt, mockData}
@@ -72,7 +73,7 @@ class PlasmaMapLevelDBSuite extends AnyFunSuite {
       val oldErgoValue = map.ergoValue
       val result = map.update(randomLongs:_*)
       println(s"Result: ${result}")
-      val boxes = buildGetManyAVLBoxes(Parameters.OneErg, randomLongs.map(l => ByteConversion.convertsLong.convertToBytes(l._1) -> convertsTestInt.convertToBytes(l._2)), oldErgoValue, result.proof.ergoValue)
+      val boxes = buildGetManyAVLBoxes(Parameters.OneErg, randomLongs.map(l => ByteConversion.convertsLongKey.convertToBytes(l._1) -> convertsTestInt.convertToBytes(l._2)), oldErgoValue, result.proof.ergoValue)
       println(boxes.head.toJson(true))
       ergoClient.execute{
         ctx =>

@@ -1,5 +1,6 @@
 package io.getblok.getblok_plasma.other_tests
 
+import io.getblok.getblok_plasma.ByteConversion.convertsLongKey
 import io.getblok.getblok_plasma.PlasmaParameters
 import io.getblok.getblok_plasma.collections.{LocalPlasmaMap, PlasmaMap}
 import io.getblok.getblok_plasma.other_tests.PlasmaMapLevelDBSuite.{TestLong, convertsTestInt, mockData}

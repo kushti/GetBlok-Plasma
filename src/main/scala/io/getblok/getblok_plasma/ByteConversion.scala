@@ -8,7 +8,7 @@ import sigmastate.Values
 import sigmastate.serialization.ErgoTreeSerializer
 import supertagged.@@
 
-trait ByteConversion[T] {
+abstract class ByteConversion[T] {
 
   def convertToBytes(t: T): Array[Byte]
   def convertFromBytes(bytes: Array[Byte]): T
@@ -34,10 +34,16 @@ object ByteConversion {
     override def convertFromBytes(bytes: Array[Byte]): String = Hex.toHexString(bytes)
   }
 
-  implicit val convertsLong: ByteConversion[Long] = new ByteConversion[Long] {
+  implicit val convertsLongKey: ByteConversion[Long] = new ByteConversion[Long] {
     override def convertToBytes(t: Long): Array[Byte] = Longs.toByteArray(t) ++ Array.fill(24)(0.toByte)
 
     override def convertFromBytes(bytes: Array[Byte]): Long = Longs.fromByteArray(bytes.slice(0, 8))
+  }
+
+  implicit val convertsLongVal: ByteConversion[Long] = new ByteConversion[Long] {
+    override def convertToBytes(t: Long): Array[Byte] = Longs.toByteArray(t)
+
+    override def convertFromBytes(bytes: Array[Byte]): Long = Longs.fromByteArray(bytes)
   }
 
   implicit val convertsId: ByteConversion[ErgoId] = new ByteConversion[ErgoId] {

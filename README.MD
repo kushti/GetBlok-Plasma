@@ -84,12 +84,13 @@ which they were entered.
 ```scala
 import io.getblok.getblok_plasma.PlasmaParameters
 import io.getblok.getblok_plasma.collections.{OpResult, PlasmaMap, Proof, ProvenResult}
+import io.getblok.getblok_plasma.ByteConversion.convertsLongVal
 import org.ergoplatform.appkit.ErgoId
 import sigmastate.AvlTreeFlags
 val tokenMap = new PlasmaMap[ErgoId, Long](AvlTreeFlags.AllOperationsAllowed, PlasmaParameters.default)
 
-val cometID: ErgoId = ErgoId.create("0cd8c9f416e5b1ca9f986a7f10a84191dfb85941619e49e53c0dc30ebf83324b")
-val tokenData: Seq[(ErgoId, Long)] = Seq(cometID -> 100L)
+val cometId: ErgoId = ErgoId.create("0cd8c9f416e5b1ca9f986a7f10a84191dfb85941619e49e53c0dc30ebf83324b")
+val tokenData: Seq[(ErgoId, Long)] = Seq(cometId -> 100L)
 
 val result: ProvenResult[Long] = tokenMap.insert(tokenData: _*)
 
@@ -120,12 +121,13 @@ ergoClient.execute {
             .build()
 }
 ```
-
+## LocalPlasmaMap
 Interacting with a locally stored Plasma Map is done in a similar way, except that you must use the
 `LocalPlasmaMap` class instead.
 ```scala
 import io.getblok.getblok_plasma.PlasmaParameters
 import io.getblok.getblok_plasma.collections.LocalPlasmaMap
+import io.getblok.getblok_plasma.ByteConversion.convertsLongKey
 import scorex.crypto.authds.avltree.batch.VersionedLDBAVLStorage
 import scorex.crypto.hash.{Blake2b256, Digest32}
 import scorex.db.LDBVersionedStore
@@ -136,3 +138,70 @@ val ldbStore = new LDBVersionedStore(new File("./level"), 10)
 val avlStorage = new VersionedLDBAVLStorage[Digest32](ldbStore, PlasmaParameters.default.toNodeParams)(Blake2b256)
 val localMap = new LocalPlasmaMap[Long, Values.ErgoTree](avlStorage, AvlTreeFlags.AllOperationsAllowed, PlasmaParameters.default)
 ```
+
+## ProxyPlasmaMap
+
+It can be useful to apply changes to a tree without necessarily committing to them. This is especially
+true in the context of chained transactions or unexpected errors. For example, if changes are applied to the
+tree but latency causes connection to the node to be lost, then the locally stored tree may have changes
+that do not exist on-chain!
+
+To deal with this problem, you can use a `ProxyPlasmaMap`. This PlasmaMap applies changes on a temporary
+tree which allows you to receive proofs for the operations you perform. However, none of these changes
+are saved to storage until the `commitChanges()` function is called. This ensures that unexpected errors
+can be dealt with easily.
+
+When dealing with the `ProxyPlasmaMap`, changes must first be explicitly enabled by calling
+`initiate()`. This function initializes the internal temporary map. Following this, operations
+may be performed on the map. All operations are applied to the temporary map, but are also kept
+track of inside an internal Queue. Once `commitChanges()` is called, the Queued operations are applied
+to persistent storage, and the temporary map is destroyed.
+
+```scala
+import io.getblok.getblok_plasma.PlasmaParameters
+import io.getblok.getblok_plasma.collections.{LocalPlasmaMap, ProxyPlasmaMap}
+import org.ergoplatform.appkit.ErgoId
+import scorex.crypto.authds.avltree.batch.VersionedLDBAVLStorage
+import scorex.crypto.hash.{Blake2b256, Digest32}
+import scorex.db.LDBVersionedStore
+import sigmastate.{AvlTreeFlags, Values}
+import io.getblok.getblok_plasma.ByteConversion.convertsLongVal
+import java.io.File
+
+val ldbStore = new LDBVersionedStore(new File("./level"), 10)
+val avlStorage = new VersionedLDBAVLStorage[Digest32](ldbStore, PlasmaParameters.default.toNodeParams)(Blake2b256)
+val proxyMap = new ProxyPlasmaMap[ErgoId, Long](avlStorage, AvlTreeFlags.AllOperationsAllowed, PlasmaParameters.default)
+val ergopadId: ErgoId = ErgoId.create("d71693c49a84fbbecd4908c94813b46514b18b67a99952dc1e6e4791556de413")
+val tokenDataErgoPad: Seq[(ErgoId, Long)] = Seq(ergopadId -> 100L)
+
+
+// This will fail due to the ProxyMap being un-initiated
+proxyMap.insert(tokenDataErgoPad: _*)
+
+// Initiates operations on the tree
+proxyMap.initiate()
+
+// This will be successfully applied to the internal temporary tree, while also queueing this
+// operation for later application into persistence
+proxyMap.insert(tokenDataErgoPad: _*)
+
+// This commits ALL of the changes made on the temporary tree into persistent storage, while also
+// destroying the temporary tree
+proxyMap.commitChanges()
+
+val cometId: ErgoId = ErgoId.create("0cd8c9f416e5b1ca9f986a7f10a84191dfb85941619e49e53c0dc30ebf83324b")
+val tokenDataComet: Seq[(ErgoId, Long)] = Seq(cometId -> 100L)
+
+proxyMap.initiate()
+proxyMap.insert(tokenDataComet: _*)
+
+// This commits only the next operation that exists in the Queue. This does NOT destroy
+// the temporary map.
+proxyMap.commitNextOperation()
+
+// This drops any uncommitted changes and destroys the temporary map. In this case,
+// all changes were already committed since only one operation was performed.
+
+proxyMap.dropChanges()
+```
+

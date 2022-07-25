@@ -52,7 +52,7 @@ trait LocalPlasmaBase[K, V] {
    * @return
    */
   def toPlasmaMap(implicit convertsKey: ByteConversion[K], convertsVal: ByteConversion[V]): PlasmaMap[K, V] = {
-    new PlasmaMap[K, V](flags, params, Some(prover.prover()))
+    new PlasmaMap[K, V](flags, params, Some(prover.prover())).copy()
   }
 
   /**
