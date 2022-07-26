@@ -2,6 +2,8 @@ package io.getblok.getblok_plasma.collections
 
 import io.getblok.getblok_plasma.collections.Operations.{BatchOperation, DeleteBatch, InsertBatch, LookupBatch, UpdateBatch}
 import io.getblok.getblok_plasma.{ByteConversion, PlasmaParameters}
+import org.bouncycastle.util.encoders.Hex
+import scorex.crypto.authds.ADDigest
 import scorex.crypto.authds.avltree.batch._
 import scorex.crypto.hash.{Blake2b256, Digest32}
 import sigmastate.AvlTreeFlags
@@ -26,12 +28,12 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
 
 
   private var tempMap: Option[PlasmaMap[K, V]] = None
-  private val localMap: LocalPlasmaMap[K, V] = new LocalPlasmaMap[K, V](store, flags, params)
+  val localMap: LocalPlasmaMap[K, V] = new LocalPlasmaMap[K, V](store, flags, params)
   private val opQueue: mutable.Queue[BatchOperation[K, V]] = mutable.Queue.empty[BatchOperation[K, V]]
 
-  override val prover: PersistentBatchAVLProver[Digest32, Blake2b256.type] = {
-    localMap.prover
-  }
+  override val prover: PersistentBatchAVLProver[Digest32, Blake2b256.type] = localMap.prover
+
+  override def digest: ADDigest = tempMap.map(_.prover.digest).getOrElse(prover.digest)
   /**
    * Initiates the ProxyMap, allowing operations to be performed on its newly created internal temp Map
    */
@@ -130,6 +132,16 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
       case DeleteBatch(keys) =>    localMap.delete(keys: _*)
     }
   }
+
+  override def toString: String = {
+    Hex.toHexString(localMap.digest)
+  }
+
+  /**
+   * Returns a pair of (String, Option[String]) that contains the hexadecimal representation
+   * of the local digest and the temporary digest if it exists.
+   */
+  def digestStrings: (String, Option[String]) = toString -> tempMap.map(_.digest).map(Hex.toHexString)
 
   /**
    * Returns the temporary map created after initiation. Returns None if the ProxyMap has not been initiated yet.

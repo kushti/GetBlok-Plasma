@@ -53,7 +53,7 @@ class ProxyMapSuite extends AnyFunSuite {
    // println(s"Manifest: ${localMap.toPlasmaMap.makeManifest.toHexString}")
     println(s"Persistent Tree height: ${map.prover.height}")
     println(s"Temporary Tree height: ${map.getTempMap.get.prover.rootNodeHeight}")
-    require(Hex.toHexString(map.digest) != Hex.toHexString(map.getTempMap.get.digest), "Digests were equal despite" +
+    require(Hex.toHexString(map.localMap.digest) != Hex.toHexString(map.getTempMap.get.digest), "Digests were equal despite" +
       " not un-committed changes!")
   }
 
@@ -105,7 +105,7 @@ class ProxyMapSuite extends AnyFunSuite {
     println(s"Temporary Digest: ${Hex.toHexString(map.getTempMap.get.digest)}")
     println(s"Post-Update Digest: ${digestString}")
 
-    require(digestString == Hex.toHexString(map.digest), "Persistent digest did not match update digest!")
+    require(digestString == Hex.toHexString(map.localMap.digest), "Persistent digest did not match update digest!")
     require(map.getTempMap.isDefined, "Temporary map was destroyed after committing one change!")
   }
 
