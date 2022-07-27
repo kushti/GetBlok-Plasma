@@ -92,9 +92,12 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
             .map(o => o.map(v => convertVal.convertFromBytes(v)))
         )
       )
-    opQueue.enqueue(LookupBatch(keys))
     val proof = mapProver.generateProof()
     ProvenResult(response, Proof(proof))
+  }
+
+  def localLookup(keys: K*): ProvenResult[V] = {
+    localMap.lookUp(keys: _*)
   }
 
   /**
