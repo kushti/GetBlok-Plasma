@@ -92,7 +92,7 @@ val keyExistScript: String =
 Here is a simple script verifying that key-values are inserted into a tree, and that the outputted box
 holds the tree's next state after applying the insertion.
 ```scala
-val keyExistScript: String =
+val insertWithNextStateScript: String =
     """
       | {
       |   val tree     = SELF.R4[AvlTree].get
