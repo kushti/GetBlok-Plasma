@@ -74,37 +74,40 @@ Here is a simple script verifying that all keys given in context var 0 exist in 
 val keyExistScript: String =
     """
       | {
-      | val tree  = SELF.R4[AvlTree].get
-      | val keys  = getVar[Coll[Coll[Byte]]](0).get
-      | val proof = getVar[Coll[Byte]](1).get
-      | 
-      | val keysExist = tree.getMany(keys, proof).forall{
-      |   (o: Option[Coll[Byte]]) =>
-      |     o.isDefined
-      | }
-      | sigmaProp(keysExist)
+      |   val tree  = SELF.R4[AvlTree].get
+      |   val keys  = getVar[Coll[Coll[Byte]]](0).get
+      |   val proof = getVar[Coll[Byte]](1).get
+      |   
+      |   val keysExist = tree.getMany(keys, proof).forall{
+      |     (o: Option[Coll[Byte]]) =>
+      |       o.isDefined
+      |   }
+      |   
+      |   sigmaProp(keysExist)
       | }
       |""".stripMargin
 ```
 
 ## Example Script 2:
 Here is a simple script verifying that key-values are inserted into a tree, and that the outputted box
-holds the tree's next state after applying the operations.
+holds the tree's next state after applying the insertion.
 ```scala
 val keyExistScript: String =
     """
       | {
-      | val tree     = SELF.R4[AvlTree].get
-      | val keyVals  = getVar[Coll[ (Coll[Byte], Coll[Byte] )]](0).get
-      | val proof    = getVar[Coll[Byte]](1).get
-      | 
-      | val nextTree: Option[AvlTree] = tree.insert(keyVals, proof)
-      | // This will fail if the operation failed or the proof is incorrect due to calling .get on the Option
-      | val outputDigest: Coll[Byte] = nextTree.get.digest 
-      | 
-      | val insertionPerformed = OUTPUTS.R4[AvlTree].get.digest == outputDigest
-      | val sameScript = OUTPUTS.propositionBytes == SELF.propositionBytes
-      | sigmaProp(sameScript && insertionPerformed)
+      |   val tree     = SELF.R4[AvlTree].get
+      |   val keyVals  = getVar[Coll[ (Coll[Byte], Coll[Byte]) ]](0).get
+      |   val proof    = getVar[Coll[Byte]](1).get
+      |   
+      |   val nextTree: Option[AvlTree] = tree.insert(keyVals, proof)
+      |   
+      |   // This will fail if the operation failed or the proof is incorrect due to calling .get on the Option
+      |   val outputDigest: Coll[Byte] = nextTree.get.digest 
+      |   
+      |   val insertionPerformed = OUTPUTS(0).R4[AvlTree].get.digest == outputDigest
+      |   val sameScript = OUTPUTS(0).propositionBytes == SELF.propositionBytes
+      |   
+      |   sigmaProp(sameScript && insertionPerformed)
       | }
       |""".stripMargin
 ```
