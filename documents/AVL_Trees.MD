@@ -20,11 +20,15 @@ As stated above, Authenticated Dictionaries keep track of the changes made to th
 with it, and this value can be used to determine information about the tree, the data stored inside of it,
 and whether changes have been made to it. This value is called the *digest*, and it represents
 the current state of the keys and values present within the tree. By keeping track of the digest, you can
-verify whether a tree's state has changed or not. For example, let's say a tree is made, and operations
+verify whether a tree's state has changed or not.
+
+For example, let's say a tree is made, and operations
 are performed on it until it's digest equals the following value:
 `c44054a97379f4607b41e6b20cff4b5e266d892221666d5f1a1faec78fc8a7ec09`. Then a few months later,
 I want to check if the tree has been untouched since the time it was interacted with. I can verify that no
 information in my tree has changed by simply verifying that the tree's current digest is equal to the digest above.
+
+
 Another important point about digests is that they are simply Blake2b256 hashes. This means each digest is simply 32 bytes,
 but it can hold data about the *entire* tree. You can therefore store hundreds of thousands of bytes of data
 within the tree, all of which can be uniquely represented by the single 32 byte digest string.
