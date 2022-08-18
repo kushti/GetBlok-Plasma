@@ -42,6 +42,11 @@ trait PlasmaBase[K, V] {
 
   override def toString: String = Hex.toHexString(digest).toLowerCase
 
+  /**
+   * Return the `Manifest` associated with this `PlasmaMap`
+   * @param subTreeDepth Depth of subtrees to slice the `PlasmaMap` into. Larger depth generally means less subtrees.
+   * @return A `Manifest` that represents this `PlasmaMap`'s current state
+   */
   def getManifest(subTreeDepth: Int = 0): Manifest = {
     implicit val hf: HF = Blake2b256
     val plasmaSerializer = new BatchAVLProverSerializer[Digest32, Blake2b256.type]
@@ -51,11 +56,5 @@ trait PlasmaBase[K, V] {
     Manifest(digest, manifest, subTrees)
   }
 
-
-  /**
-   * Returns persistent items as a Map
-   * @return Return mapping of keys to values
-   */
-  def toMap: Map[K, V]
 }
 

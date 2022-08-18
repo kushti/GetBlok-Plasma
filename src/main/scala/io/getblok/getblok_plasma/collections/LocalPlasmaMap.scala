@@ -10,10 +10,13 @@ import supertagged.@@
 import java.io.File
 
 /**
- * Basic key-value mapping of AVL Tree using
- * @param store
- * @tparam K
- * @tparam V
+ * The `LocalPlasmaMap` represents an AVL Tree stored in a local persistent database. You can use `LocalPlasmaMap`'s to
+ * keep track of a state after the process has already ended.
+ * @param store The VersionedAVLStorage used to persist the AVL state. Must use a 32-byte digest.
+ * @param flags AvlTreeFlags associated with this PlasmaMap
+ * @param params PlasmaParameters used to apply certain settings to this PlasmaMap
+ * @tparam K the Key type associated with this PlasmaMap
+ * @tparam V the Value type associated with this PlasmaMap
  */
 class LocalPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val flags: AvlTreeFlags, override val params: PlasmaParameters)
                           (implicit val convertKey: ByteConversion[K], convertVal: ByteConversion[V]) extends LocalPlasmaBase[K, V]{
@@ -76,14 +79,24 @@ class LocalPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
 
   /**
    * Get the key-values currently associated with this PlasmaMap from persistent storage.
-   *
+   *  NOTE: Not implemented yet
    * @return Sequence of Key Values from persistent storage
    */
-  override def persistentItems: Seq[(K, V)] = ???
+  override def persistentItems: Seq[(K, V)] = {
+    ???
+  }
 
   /**
    * Returns persistent items as a Map
+   * NOTE: Not implemented yet
    * @return Return mapping of keys to values
    */
   override def toMap: Map[K, V] = ???
+}
+
+object LocalPlasmaMap {
+  def apply[K, V](store: VersionedAVLStorage[Digest32], flags: AvlTreeFlags, params: PlasmaParameters)
+  (implicit convertKey: ByteConversion[K], convertVal: ByteConversion[V]): LocalPlasmaMap[K, V] = {
+      new LocalPlasmaMap[K, V](store, flags, params)
+  }
 }

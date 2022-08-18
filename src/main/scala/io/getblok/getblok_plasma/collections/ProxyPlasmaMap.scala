@@ -13,13 +13,15 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
 
 /**
- * The ProxyPlasmaMap is used to prevent unnecessary writes on a Local DB. All operations may only be performed
+ * The `ProxyPlasmaMap` is used to prevent unnecessary writes on a Local DB. All operations may only be performed
  * after the Map has been initiated. Once initiated, the map performs operations on a temporary Plasma Map, while keeping
- * track of operations within an internal Queue. Once commitChanges() is called, all operations within the Queue are
- * automatically applied to the real LocalPlasmaMap, causing storage to be updated.
- * @param store VersionedAVLStorage for PlasmaMap
- * @tparam K Convertible Key
- * @tparam V Convertible Value
+ * track of operations within an internal Queue. Once `commitChanges()` is called, all operations within the Queue are
+ * automatically applied to the real `LocalPlasmaMap`, causing storage to be updated.
+ * @param store The VersionedAVLStorage used to persist the AVL state. Must use a 32-byte digest.
+ * @param flags AvlTreeFlags associated with this PlasmaMap
+ * @param params PlasmaParameters used to apply certain settings to this PlasmaMap
+ * @tparam K the Key type associated with this PlasmaMap
+ * @tparam V the Value type associated with this PlasmaMap
  */
 class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val flags: AvlTreeFlags, override val params: PlasmaParameters)
                           (implicit val convertKey: ByteConversion[K], convertVal: ByteConversion[V]) extends LocalPlasmaBase[K, V]{
@@ -28,6 +30,9 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
 
 
   private var tempMap: Option[PlasmaMap[K, V]] = None
+  /**
+   * Get the underlying LocalPlasmaMap from this Proxy
+   */
   val localMap: LocalPlasmaMap[K, V] = new LocalPlasmaMap[K, V](store, flags, params)
   private val opQueue: mutable.Queue[BatchOperation[K, V]] = mutable.Queue.empty[BatchOperation[K, V]]
 
@@ -41,6 +46,11 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
     tempMap = Some(localMap.toPlasmaMap)
   }
 
+  /**
+   * Apply insertions to the temporary tree
+   * @param keyVals Key-Value pairs to insert
+   * @return ProvenResult of insertion
+   */
   override def insert(keyVals: (K, V)*): ProvenResult[V] = {
     val mapProver = tempMap.map(_.prover).getOrElse(throw new UninitiatedProxyException)
     val response = keyVals
@@ -55,6 +65,11 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
     ProvenResult(response, Proof(proof))
   }
 
+  /**
+   * Apply updates to the temporary tree
+   * @param newKeyVals Key-Value pairs to update
+   * @return ProvenResult of update
+   */
   override def update(newKeyVals: (K, V)*): ProvenResult[V] = {
     val mapProver = tempMap.map(_.prover).getOrElse(throw new UninitiatedProxyException)
     val response = newKeyVals
@@ -69,6 +84,11 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
     ProvenResult(response, Proof(proof))
   }
 
+  /**
+   * Apply deletions to the temporary tree
+   * @param keys Keys to delete from the tree
+   * @return ProvenResult of deletion
+   */
   override def delete(keys: K*): ProvenResult[V] = {
     val mapProver = tempMap.map(_.prover).getOrElse(throw new UninitiatedProxyException)
     val response = keys
@@ -83,6 +103,13 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
     ProvenResult(response, Proof(proof))
   }
 
+  /**
+   * Apply lookUps to the temporary tree
+   *
+   * NOTE: LookUps only apply to the temporary map. Use `localLookUp` to lookUp keys existing in the underlying `LocalPlasmaMap``
+   * @param keys Keys to lookUp in the tree
+   * @return ProvenResult of lookUp
+   */
   override def lookUp(keys: K*): ProvenResult[V] = {
     val mapProver = tempMap.map(_.prover).getOrElse(throw new UninitiatedProxyException)
     val response = keys
@@ -96,7 +123,7 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
     ProvenResult(response, Proof(proof))
   }
 
-  def localLookup(keys: K*): ProvenResult[V] = {
+  def localLookUp(keys: K*): ProvenResult[V] = {
     localMap.lookUp(keys: _*)
   }
 
@@ -127,7 +154,7 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
     performBatchOp(opBatch)
   }
 
-  def performBatchOp(op: BatchOperation[K, V]): ProvenResult[V] = {
+  private def performBatchOp(op: BatchOperation[K, V]): ProvenResult[V] = {
     op match {
       case InsertBatch(keyVals) => localMap.insert(keyVals: _*)
       case UpdateBatch(keyVals) => localMap.update(keyVals: _*)
@@ -136,6 +163,10 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
     }
   }
 
+  /**
+   * Returns the hexadecimal string representation of the digest of the underlying LocalPlasmaMap
+   * @return
+   */
   override def toString: String = {
     Hex.toHexString(localMap.digest)
   }
@@ -161,13 +192,24 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
   /**
    * Get the key-values currently associated with this PlasmaMap from persistent storage.
    *
+   * NOTE: - Not implemented
+   *
    * @return Sequence of Key Values from persistent storage
    */
   override def persistentItems: Seq[(K, V)] = ???
 
   /**
    * Returns persistent items as a Map
+   *
+   * NOTE: - Not implemented
    * @return Return mapping of keys to values
    */
   override def toMap: Map[K, V] = ???
+}
+
+object ProxyPlasmaMap {
+    def apply[K, V](store: VersionedAVLStorage[Digest32], flags: AvlTreeFlags, params: PlasmaParameters)
+                   (implicit convertKey: ByteConversion[K], convertVal: ByteConversion[V]): ProxyPlasmaMap[K, V] = {
+      new ProxyPlasmaMap[K, V](store, flags, params)
+    }
 }

@@ -8,7 +8,7 @@ import sigmastate.Values
 import sigmastate.serialization.ErgoTreeSerializer
 import supertagged.@@
 
-abstract class ByteConversion[T] {
+trait ByteConversion[T] {
 
   def convertToBytes(t: T): Array[Byte]
   def convertFromBytes(bytes: Array[Byte]): T
@@ -34,12 +34,19 @@ object ByteConversion {
     override def convertFromBytes(bytes: Array[Byte]): String = Hex.toHexString(bytes)
   }
 
+  /**
+   * Converts a `Long` into a `Array[Byte]` with a length of 32 bytes. The first 8 bytes represent the serialized `Long`,
+   * while the remaining 24 bytes are simply 0's
+   */
   implicit val convertsLongKey: ByteConversion[Long] = new ByteConversion[Long] {
     override def convertToBytes(t: Long): Array[Byte] = Longs.toByteArray(t) ++ Array.fill(24)(0.toByte)
 
     override def convertFromBytes(bytes: Array[Byte]): Long = Longs.fromByteArray(bytes.slice(0, 8))
   }
 
+  /**
+   * Converts a `Long` into the standard `Array[Byte]` of length 8.
+   */
   implicit val convertsLongVal: ByteConversion[Long] = new ByteConversion[Long] {
     override def convertToBytes(t: Long): Array[Byte] = Longs.toByteArray(t)
 

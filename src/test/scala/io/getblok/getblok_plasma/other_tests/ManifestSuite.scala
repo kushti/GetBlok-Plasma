@@ -20,7 +20,7 @@ class ManifestSuite extends AnyFunSuite {
   var plasma: PlasmaMap[Long, Long] = _
 
   test("Create PlasmaMap") {
-    plasma = new PlasmaMap[Long, Long](AvlTreeFlags.AllOperationsAllowed, PlasmaParameters.default)
+    plasma = PlasmaMap[Long, Long](AvlTreeFlags.AllOperationsAllowed, PlasmaParameters.default)
     println(s"Digest ${Hex.toHexString(plasma.digest)}")
   }
 
@@ -36,7 +36,7 @@ class ManifestSuite extends AnyFunSuite {
   }
 
   test("Load a manifest into a new tree"){
-    val newMap = new PlasmaMap[Long, Long](AvlTreeFlags.AllOperationsAllowed, PlasmaParameters.default)
+    val newMap = PlasmaMap[Long, Long](AvlTreeFlags.AllOperationsAllowed, PlasmaParameters.default)
     println(s"Init Digest: ${newMap.toString}")
     val oldManf = plasma.getManifest(255)
     newMap.loadManifest(oldManf)
@@ -59,7 +59,7 @@ class ManifestSuite extends AnyFunSuite {
 
   test("Verify string loaded manifests have same digest"){
     val manifest: Manifest = Manifest.fromHexStrings(digestHex, manHex, subtreesHex)
-    val newMap = new PlasmaMap[Long, Long](AvlTreeFlags.AllOperationsAllowed, PlasmaParameters.default)
+    val newMap = PlasmaMap[Long, Long](AvlTreeFlags.AllOperationsAllowed, PlasmaParameters.default)
     println(s"New map digest: ${newMap.toString}")
     require(newMap.toString != plasma.toString, "Unloaded map had same digest as current map!")
     newMap.loadManifest(manifest)

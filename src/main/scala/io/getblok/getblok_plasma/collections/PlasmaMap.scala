@@ -10,8 +10,9 @@ import sigmastate.AvlTreeFlags
 /**
  * Basic key-value mapping with an underlying AVL Tree. PlasmaMaps represent temporary (non-persistent) AVL Trees.
  * @param flags AvlTreeFlags associated with this PlasmaMap
- * @tparam K
- * @tparam V
+ * @param params PlasmaParameters used to apply certain settings to this PlasmaMap
+ * @tparam K the Key type associated with this PlasmaMap
+ * @tparam V the Value type associated with this PlasmaMap
  */
 class PlasmaMap[K, V](override val flags: AvlTreeFlags, override val params: PlasmaParameters,
                       initProver: Option[BatchAVLProver[Digest32, Blake2b256.type]] = None)
@@ -113,10 +114,11 @@ class PlasmaMap[K, V](override val flags: AvlTreeFlags, override val params: Pla
     treeCopy.loadManifest(getManifest())
   }
 
-  /**
-   * Returns persistent items as a Map
-   *
-   * @return Return mapping of keys to values
-   */
-  override def toMap: Map[K, V] = ???
+}
+
+object PlasmaMap {
+  def apply[K, V](flags: AvlTreeFlags, params: PlasmaParameters)
+                 (implicit convertKey: ByteConversion[K], convertVal: ByteConversion[V]): PlasmaMap[K, V] = {
+    new PlasmaMap[K, V](flags, params)
+  }
 }

@@ -10,6 +10,11 @@ import supertagged.@@
 
 import java.lang
 
+/**
+ * A Proof represents a the parts of the tree that were reconstructed during the operation. It may be used to mirror
+ * off-chain operations with their on-chain counterparts.
+ * @param bytes Proof bytes
+ */
 case class Proof(bytes: Array[Byte]){
   lazy val ergoType: ErgoType[java.lang.Byte] = ErgoType.byteType()
   def ergoValue: ErgoValue[Coll[java.lang.Byte]] = ErgoValue.of(bytes)
