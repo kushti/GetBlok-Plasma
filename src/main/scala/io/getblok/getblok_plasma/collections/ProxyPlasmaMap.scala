@@ -38,6 +38,9 @@ class ProxyPlasmaMap[K, V](store: VersionedAVLStorage[Digest32], override val fl
 
   override val prover: PersistentBatchAVLProver[Digest32, Blake2b256.type] = localMap.prover
 
+  /**
+   * @return Current digest of the temporary map if it exists, otherwise returns the digest of the local map
+   */
   override def digest: ADDigest = tempMap.map(_.prover.digest).getOrElse(prover.digest)
   /**
    * Initiates the ProxyMap, allowing operations to be performed on its newly created internal temp Map
