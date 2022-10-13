@@ -19,6 +19,14 @@ import scala.util.Try
 case class OpResult[V](tryOp: Try[Option[V]])(implicit converter: ByteConversion[V]) {
   lazy val ergoType: ErgoType[java.lang.Byte] = ErgoType.byteType()
 
+  /**
+   * Shorthand for opResult.tryOp.get.get
+   * Will throw an exception if either the Try or the Option failed to return successfully.
+   * @return
+   * The underlying value returned by the operation
+   */
+  def get: V = tryOp.get.get
+
   def ergoValue: ErgoValue[Coll[java.lang.Byte]] = {
     ErgoValue.of(Colls.fromArray(
       converter.convertToBytes(tryOp.getOrElse(throw new NoResultException).getOrElse(throw new NoResultException)))

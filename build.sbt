@@ -3,12 +3,12 @@ import xerial.sbt.Sonatype.GitHubHosting
 
 name := "getblok_plasma"
 organization := "io.github.getblok-io"
-version := "1.0.0"
+version := "1.0.1"
 //idePackagePrefix := Some("io.getblok.getblok_plasma")
 scalaVersion := "2.12.10"
-ThisBuild / version      := "1.0.0"
+ThisBuild / version      := "1.0.1"
 libraryDependencies ++= Seq(
-  "org.ergoplatform" %% "ergo-appkit" % "4.0.10",
+  "org.ergoplatform" %% "ergo-appkit" % "ac116c85-SNAPSHOT",
   "org.scalatest" %% "scalatest" % "3.2.12" % "test",
   "io.swaydb" %% "swaydb" % "0.16.2",
   "io.swaydb" %% "boopickle" % "0.16.2",
@@ -30,6 +30,7 @@ resolvers ++= Seq(
   "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
   "Bintray" at "https://jcenter.bintray.com/"
 )
+
 
 assemblyMergeStrategy in assembly := {
   case "logback.xml" => MergeStrategy.first

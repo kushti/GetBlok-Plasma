@@ -7,7 +7,7 @@ import io.getblok.getblok_plasma.other_tests.PlasmaMapLevelDBSuite.{TestLong, co
 import io.getblok.getblok_plasma.{ByteConversion, PlasmaParameters}
 import org.bouncycastle.util.encoders.Hex
 import org.ergoplatform.appkit.impl.ErgoTreeContract
-import org.ergoplatform.appkit.{Address, InputBox, Parameters}
+import org.ergoplatform.appkit.{Address, Eip4Token, InputBox, Parameters}
 import org.scalatest.funsuite.AnyFunSuite
 import scorex.crypto.authds.avltree.batch.VersionedLDBAVLStorage
 import scorex.crypto.hash.{Blake2b256, Digest32}
