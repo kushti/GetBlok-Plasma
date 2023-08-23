@@ -2,7 +2,8 @@ package io.getblok.getblok_plasma
 
 import com.google.common.primitives.Longs
 import org.bouncycastle.util.encoders.Hex
-import org.ergoplatform.appkit.{Address, ErgoId}
+import org.ergoplatform.appkit.Address
+import org.ergoplatform.sdk.ErgoId
 import scorex.crypto.authds.{ADDigest, ADKey, ADValue}
 import sigmastate.Values
 import sigmastate.serialization.ErgoTreeSerializer

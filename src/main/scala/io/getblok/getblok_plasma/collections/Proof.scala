@@ -1,14 +1,13 @@
 package io.getblok.getblok_plasma.collections
 
 import org.bouncycastle.util.encoders.Hex
-import org.ergoplatform.appkit.JavaHelpers.JByteRType
-import org.ergoplatform.appkit.{ErgoType, ErgoValue, Iso}
+import org.ergoplatform.sdk.JavaHelpers.JByteRType
+import org.ergoplatform.sdk.Iso
+import org.ergoplatform.appkit.{ErgoType, ErgoValue}
 import scorex.crypto.authds
 import sigmastate.eval.Colls
 import special.collection.Coll
 import supertagged.@@
-
-import java.lang
 
 /**
  * A Proof represents a the parts of the tree that were reconstructed during the operation. It may be used to mirror

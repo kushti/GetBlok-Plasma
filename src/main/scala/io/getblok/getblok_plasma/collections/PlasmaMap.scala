@@ -94,12 +94,14 @@ class PlasmaMap[K, V](override val flags: AvlTreeFlags, override val params: Pla
    */
   def loadManifest(manifest: Manifest): PlasmaMap[K, V] = {
     implicit val hf: HF = Blake2b256
+    implicit val logger = scorex.utils.Logger.Default
     val plamaSerializer = new BatchAVLProverSerializer[Digest32, Blake2b256.type]
 
-    val treeManifest = plamaSerializer.manifestFromBytes(manifest.bytes)
+    val treeManifest = plamaSerializer.manifestFromBytes(manifest.bytes, params.keySize)
     val subTrees = manifest.subTrees.map(t => plamaSerializer.subtreeFromBytes(t, params.keySize))
 
-    prover = plamaSerializer.combine(treeManifest.get, subTrees.map(_.get)).getOrElse(throw new ProverCreationException)
+    prover = plamaSerializer.combine(treeManifest.get -> subTrees.map(_.get), params.keySize, params.valueSizeOpt)
+                            .getOrElse(throw new ProverCreationException)
     this
   }
 

@@ -49,6 +49,7 @@ trait PlasmaBase[K, V] {
    */
   def getManifest(subTreeDepth: Int = 0): Manifest = {
     implicit val hf: HF = Blake2b256
+    implicit val logger = scorex.utils.Logger.Default
     val plasmaSerializer = new BatchAVLProverSerializer[Digest32, Blake2b256.type]
     val slicedTree = plasmaSerializer.slice(prover, subTreeDepth)
     val manifest = plasmaSerializer.manifestToBytes(slicedTree._1)
